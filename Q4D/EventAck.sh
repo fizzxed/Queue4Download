@@ -11,10 +11,8 @@ readonly BUS_PORT=1883
 readonly CHANNEL=ACK
 readonly OTHER_PARMS='-C 1'
 
-readonly RTCONTROL=/home/owner/bin/rtcontrol
 readonly ACK=DONE
 readonly NACK=OOPS
-readonly SET_LABEL="--custom 1"
 readonly ACK_VALUE="+"
 readonly LOGFILE=~/Queue.log
 
@@ -29,10 +27,8 @@ function Main()
     do
         if [[ ${Event[$ACK_FIELD]} == $ACK_VALUE ]]
         then
-            $RTCONTROL  hash=${Event[$HASH]} $SET_LABEL=$ACK 
             _ack_field=$ACK
         else
-            $RTCONTROL  hash=${Event[$HASH]} $SET_LABEL=$NACK 
             _ack_field=$NACK
         fi
         

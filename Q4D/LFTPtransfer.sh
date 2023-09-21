@@ -5,13 +5,17 @@
 readonly USER="dummy"
 readonly PW="dummyPW"
 
+# Local Values
+readonly LOCAL_BASE="/home/owner/Downloads/Torrents"
+
 
 # LFTP Values
 readonly CREDS='dummy:dummyPW'
 readonly HOST="owner.chmuranet.net"
 readonly BASE="/home/owner/Downloads/"
-readonly THREADS=3
-readonly SEGMENTS=3
+readonly THREADS=5
+readonly SEGMENTS=5
+readonly FTPOPTIONS="set ftp:ssl-force yes; set ssl:verify-certificate no"
 readonly HOSTKEYFIX="set sftp:auto-confirm yes"
 
 ## Event Bus (for ACK)
@@ -24,30 +28,27 @@ readonly OTHER_PARMS="-q 2"
 
 readonly LOGFILE=~/Process.log
 
-declare -A TypeCodes=\
-(
-	[A]="/NAS/POST"
-	[T]="/NAS/justDown/TV"
-	[M]="/NAS/justDown/Movies"
-	[V]="/NAS/Video"
-	[ERR]="/NAS/Other"
-)
-
-
 function Main()
 {
 	local _result
 	
 	local _target="$1"
 	local _hash=$2
-	local _where2=$3
+	local _category=$3
 
 
 	WaitLock
 
-	SetDirectory ${_where2}
+	SetDirectory ${_category}
 
 	_result=$(TransferPayload "${_target}")
+
+	if [[ _result -eq 0 ]]
+	then
+		# fix perms
+		chown -R docker:users "${_target}"
+		chmod -R a=,a+rX,u+w,g+w "${_target}"
+	fi
 
 	ProcessResult ${_result} "${_target}" ${_hash}
 
@@ -62,9 +63,11 @@ function WaitLock()
 
 function SetDirectory()
 {
-	local _destination=${TypeCodes[$1]:-${TypeCodes[ERR]}}
 
-	cd ${_destination}
+	local _destination=$1
+
+	cd "${LOCAL_BASE}/${_destination}"
+
 }
 
 
@@ -76,14 +79,14 @@ function TransferPayload()
 	umask 0
 
     # Try to grab as a directory
-	lftp -u ${CREDS} sftp://${HOST}/  -e "$HOSTKEYFIX; cd $BASE ; mirror -c  --parallel=$THREADS --use-pget-n=$SEGMENTS \"${_target}\" ;quit" >>/tmp/fail$$.log 2>&1 
+	lftp -u ${CREDS} sftp://${HOST}/  -e "$HOSTKEYFIX; $FTPOPTIONS; cd $BASE ; mirror -c  --parallel=$THREADS --use-pget-n=$SEGMENTS \"${_target}\" ;quit" >>/tmp/fail$$.log 2>&1 
 
 	_transferred=$?
 
 	if [[ $_transferred -ne 0 ]]
 	then
             # Now as a file
-        	lftp -u ${CREDS} sftp://${HOST}/  -e "$HOSTKEYFIX;cd ${BASE} ; pget -n $SEGMENTS \"${_target}\" ;quit" >>/tmp/fail$$.log 2>&1 
+        	lftp -u ${CREDS} ftp://${HOST}/  -e "$HOSTKEYFIX; $FTPOPTIONS; cd ${BASE} ; pget -n $SEGMENTS \"${_target}\" ;quit" >>/tmp/fail$$.log 2>&1 
         	_transferred=$?
 	fi
 

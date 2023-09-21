@@ -9,7 +9,7 @@ readonly NUM_FIELDS=3
 
 readonly FILENAME=0
 readonly HASH=1
-readonly TYPE=2
+readonly CATEGORY=2
 
 # Configuration
 readonly LFTP_SCRIPT=/home/owner/Scripts/LFTPtransfer.sh
@@ -33,13 +33,13 @@ function Main()
 {
 	while GetEvent
 	do
-        	echo $(date)": Event received for "${Event[$FILENAME]}" "${Event[$HASH]} "/ " ${Event[$TYPE]} >> $LOGFILE
+        	echo $(date)": Event received for "${Event[$FILENAME]}" "${Event[$HASH]} "/ " ${Event[$CATEGORY]} >> $LOGFILE
 
 
         	if [[ ${#Event[@]} -eq NUM_FIELDS ]]
        		then
 			# Spawn transfer process
-               		$LFTP_SCRIPT "${Event[$FILENAME]}" ${Event[$HASH]} ${Event[$TYPE]} 2>>$LOGFILE &
+               		$LFTP_SCRIPT "${Event[$FILENAME]}" ${Event[$HASH]} ${Event[$CATEGORY]} 2>>$LOGFILE &
         	else
                		echo $(date)": Event Malformed, " ${#Event[@]} " Elements - Discarded "  >> $LOGFILE
         	fi
