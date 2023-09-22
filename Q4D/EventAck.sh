@@ -1,7 +1,8 @@
 #!/bin/bash
 
-readonly HASH=0
-readonly ACK_FIELD=1
+readonly NAME=0
+readonly HASH=1
+readonly ACK_FIELD=2
 readonly USER=dummy
 readonly PW=dummyPW
 
@@ -32,7 +33,7 @@ function Main()
             _ack_field=$NACK
         fi
         
-        _name=$($RTCONTROL  -q hash="${Event[$HASH]}" -o name )
+        _name="${Event[$NAME]}"
 
         printf "%s: Transfer <%s> %s ( %s )\n" "$(date)" ${_ack_field} "${_name}" ${Event[HASH]}  >> ${LOGFILE}
     done

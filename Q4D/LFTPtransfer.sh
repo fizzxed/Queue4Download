@@ -106,13 +106,13 @@ function ProcessResult()
         # ACK
        	echo $(date)": Transfer of ${_target} Completed." >> $LOGFILE
 
-        _event=$(printf "%s +\n" ${_hash})
+        _event=$(printf "%s %s +\n" ${_target} ${_hash})
     else
         # NACK
         echo $(date)": Transfer of ${_target} Failed." >> $LOGFILE
      	cat /tmp/fail$$.log >> $LOGFILE
         
-        _event=$(printf "%s #\n" ${_hash})
+        _event=$(printf "%s %s #\n" ${_target} ${_hash})
     
     fi
 
