@@ -17,8 +17,7 @@ readonly USER="dummy"
 readonly PW="dummyPW"
 
 
-function Main()
-{
+function Main() {
 	local _name="$1"
 	local _category="$2"
 	local _hash="$3"
@@ -39,52 +38,44 @@ function Main()
 	local _lower=$(echo "${_category}" | tr '[:upper:]' '[:lower:]')
 	local _filter="sonarr|radarr"
 
-	if [[ $_lower =~ $_filter || $_tags =~ "sync" ]]
-	then
-	
+	if [[ $_lower =~ $_filter || $_tags =~ "sync" ]] then
 		_event="$(CreateEvent)"
-
 		_queued=$(PublishEvent "${_event}")
 	fi
 	
 	LogEvent ${_queued}
 }
 
-function WaitLock()
-{
+function WaitLock() {
 	# Wait 
 	exec 5>/tmp/lock
 	flock 5
 }
 
-function CreateEvent()
-{
+function CreateEvent() {
 	printf "%s\t%s\t%s\n" "${payloadDetails[KEY]}" ${payloadDetails[HASHVAL]} ${payloadDetails[CATEGORY]}
 }
 
 
-function LogEvent()
-{
+function LogEvent() {
 	local _result
 	local _elapsed=$(( ${SECONDS}-${Invoke} ))
 
-	if [[ $1==0 ]]
-	then 
+	if [[ $1 == 0 ]]; then 
 		_result="SUCCESS"
 	else
 		_result="FAIL"
 	fi
-	
+
 	printf "%s: <%s> %s ( %s ) ( %s ) [%d secs]\n" "$(date)" ${_result} "${payloadDetails[KEY]}" "${payloadDetails[HASHVAL]}" ${payloadDetails[CATEGORY]}  ${_elapsed} >> ${LOGFILE}
 }
 
 
-function PublishEvent()
-{
+function PublishEvent() {
 	local _event="$1"
 
 	$PUBLISHER -h $BUS_HOST  -p $BUS_PORT -t $CHANNEL -u $USER -P $PW -m "${_event}" $OTHER_PARMS
-	
+
 	echo $?
 }
 
