@@ -12,6 +12,7 @@ readonly LOCAL_BASE="/home/owner/Downloads/Torrents"
 # LFTP Values
 readonly CREDS='dummy:dummyPW'
 readonly HOST="owner.chmuranet.net"
+readonly PORT=21
 readonly BASE="/home/owner/Downloads/"
 readonly THREADS=5
 readonly SEGMENTS=5
@@ -33,19 +34,20 @@ function Main()
 	local _result
 	
 	local _target="$1"
-	local _hash=$2
-	local _category=$3
+	local _hash="$2"
+	local _category="$3"
+	local _content_path="$4"
 
 
 	WaitLock
 
 	SetDirectory ${_category}
 
-	_result=$(TransferPayload "${_target}")
+	_result=$(TransferPayload "${_content_path}")
 
 	if [[ _result -eq 0 ]]
 	then
-		# fix perms
+		# fix perms (if not running via docker)
 		chown -R docker:users "${_target}"
 		chmod -R a=,a+rX,u+w,g+w "${_target}"
 	fi
@@ -79,14 +81,14 @@ function TransferPayload()
 	umask 0
 
     # Try to grab as a directory
-	lftp -u ${CREDS} sftp://${HOST}/  -e "$HOSTKEYFIX; $FTPOPTIONS; cd $BASE ; mirror -c  --parallel=$THREADS --use-pget-n=$SEGMENTS \"${_target}\" ;quit" >>/tmp/fail$$.log 2>&1 
+	lftp -u ${CREDS} ftp://${HOST}:${PORT}  -e "$HOSTKEYFIX; $FTPOPTIONS; cd $BASE ; mirror -c  --parallel=$THREADS --use-pget-n=$SEGMENTS \"${_target}\" ;quit" >>/tmp/fail$$.log 2>&1 
 
 	_transferred=$?
 
 	if [[ $_transferred -ne 0 ]]
 	then
             # Now as a file
-        	lftp -u ${CREDS} ftp://${HOST}/  -e "$HOSTKEYFIX; $FTPOPTIONS; cd ${BASE} ; pget -n $SEGMENTS \"${_target}\" ;quit" >>/tmp/fail$$.log 2>&1 
+        	lftp -u ${CREDS} ftp://${HOST}:${PORT}  -e "$HOSTKEYFIX; $FTPOPTIONS; cd ${BASE} ; pget -n $SEGMENTS \"${_target}\" ;quit" >>/tmp/fail$$.log 2>&1 
         	_transferred=$?
 	fi
 
@@ -106,13 +108,13 @@ function ProcessResult()
         # ACK
        	echo $(date)": Transfer of ${_target} Completed." >> $LOGFILE
 
-        _event=$(printf "%s %s +\n" ${_target} ${_hash})
+        _event=$(printf "%s\t%s\t+\n" "${_target}" ${_hash})
     else
         # NACK
         echo $(date)": Transfer of ${_target} Failed." >> $LOGFILE
      	cat /tmp/fail$$.log >> $LOGFILE
         
-        _event=$(printf "%s %s #\n" ${_target} ${_hash})
+        _event=$(printf "%s\t%s\t#\n" "${_target}" ${_hash})
     
     fi
 
@@ -129,5 +131,5 @@ function ProcessResult()
     fi
 }
 
-Main "$1" $2 $3
+Main "$1" "$2" "$3" "$4"
 

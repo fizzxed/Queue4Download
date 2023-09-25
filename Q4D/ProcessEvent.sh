@@ -5,11 +5,12 @@ declare -a Event
 # Constants
 
 readonly BUS_PATH="/usr/bin/mosquitto_sub"
-readonly NUM_FIELDS=3
+readonly NUM_FIELDS=4
 
 readonly FILENAME=0
 readonly HASH=1
 readonly CATEGORY=2
+readonly CONTENT_PATH=3
 
 # Configuration
 readonly LFTP_SCRIPT=/home/owner/Scripts/LFTPtransfer.sh
@@ -33,13 +34,13 @@ function Main()
 {
 	while GetEvent
 	do
-        	echo $(date)": Event received for "${Event[$FILENAME]}" "${Event[$HASH]} "/ " ${Event[$CATEGORY]} >> $LOGFILE
+        	echo $(date)": Event received for "${Event[$FILENAME]}" "${Event[$HASH]} "/ " ${Event[$CATEGORY]} " @ " ${Event[$CONTENT_PATH]} >> $LOGFILE
 
 
         	if [[ ${#Event[@]} -eq NUM_FIELDS ]]
        		then
 			# Spawn transfer process
-               		$LFTP_SCRIPT "${Event[$FILENAME]}" ${Event[$HASH]} ${Event[$CATEGORY]} 2>>$LOGFILE &
+               		$LFTP_SCRIPT "${Event[$FILENAME]}" ${Event[$HASH]} ${Event[$CATEGORY]} ${Event[$CONTENT_PATH]} 2>>$LOGFILE &
         	else
                		echo $(date)": Event Malformed, " ${#Event[@]} " Elements - Discarded "  >> $LOGFILE
         	fi

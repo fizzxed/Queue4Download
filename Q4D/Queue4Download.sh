@@ -22,6 +22,7 @@ function Main() {
 	local _category="$2"
 	local _hash="$3"
 	local _tags="$4"
+	local _content_path="$5"
 	local _event
 	local _queued="1" # Default Not Queued`	
 
@@ -35,10 +36,12 @@ function Main() {
 
 	payloadDetails[CATEGORY]="${_category}"
 
+	payloadDetails[CONTENT_PATH]="${_content_path}"
+
 	local _lower=$(echo "${_category}" | tr '[:upper:]' '[:lower:]')
 	local _filter="sonarr|radarr"
 
-	if [[ $_lower =~ $_filter || $_tags =~ "sync" ]] then
+	if [[ $_lower =~ $_filter || $_tags =~ "sync" ]]; then
 		_event="$(CreateEvent)"
 		_queued=$(PublishEvent "${_event}")
 	fi
@@ -53,7 +56,7 @@ function WaitLock() {
 }
 
 function CreateEvent() {
-	printf "%s\t%s\t%s\n" "${payloadDetails[KEY]}" ${payloadDetails[HASHVAL]} ${payloadDetails[CATEGORY]}
+	printf "%s\t%s\t%s\t%s\n" "${payloadDetails[KEY]}" "${payloadDetails[HASHVAL]}" "${payloadDetails[CATEGORY]}" "${payloadDetails[CONTENT_PATH]}"
 }
 
 
@@ -67,7 +70,7 @@ function LogEvent() {
 		_result="FAIL"
 	fi
 
-	printf "%s: <%s> %s ( %s ) ( %s ) [%d secs]\n" "$(date)" ${_result} "${payloadDetails[KEY]}" "${payloadDetails[HASHVAL]}" ${payloadDetails[CATEGORY]}  ${_elapsed} >> ${LOGFILE}
+	printf "%s: <%s> %s ( %s ) ( %s ) ( %s ) [%d secs]\n" "$(date)" ${_result} "${payloadDetails[KEY]}" "${payloadDetails[HASHVAL]}" "${payloadDetails[CATEGORY]}" "${payloadDetails[CONTENT_PATH]}" ${_elapsed} >> ${LOGFILE}
 }
 
 
@@ -79,4 +82,4 @@ function PublishEvent() {
 	echo $?
 }
 
-Main "$1" "$2" "$3" "$4"
+Main "$1" "$2" "$3" "$4" "$5"

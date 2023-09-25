@@ -44,7 +44,7 @@ function Main()
 function GetEvent()
 {
         oldIFS=$IFS
-        IFS=$' '
+        IFS=$'\t'
 
         Event=($($SUBSCRIBER -h $BUS_HOST $OTHER_PARMS  -p $BUS_PORT  -t $CHANNEL -u $USER -P $PW  ))
         local result=$?
