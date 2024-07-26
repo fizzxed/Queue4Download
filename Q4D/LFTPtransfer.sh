@@ -16,7 +16,7 @@ readonly PORT=21
 readonly BASE="/home/owner/Downloads/"
 readonly THREADS=5
 readonly SEGMENTS=5
-readonly FTPOPTIONS="set ftp:ssl-force yes; set ssl:verify-certificate no"
+readonly FTPOPTIONS="set ftp:ssl-force yes; set ssl:verify-certificate no; set xfer:use-temp-file yes; set xfer:temp-file-name *.lftp"
 readonly HOSTKEYFIX="set sftp:auto-confirm yes"
 
 ## Event Bus (for ACK)
